@@ -136,3 +136,36 @@ app.get('/api/orders', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        const order = await db.collection('orders').findOne({
+            _id: new ObjectId(req.params.id)
+        });
+
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        for (const lessonId of order.lessonIds) {
+            await db.collection('lessons').updateOne(
+                { _id: lessonId },
+                { $inc: { spaces: 1 } } 
+            );
+        }
+
+        const result = await db.collection('orders').deleteOne({
+            _id: new ObjectId(req.params.id)
+        });
+
+        res.json({ message: "Order deleted and lesson spaces updated" });
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.get('/test-image/:imageName', (req,res) => {
+    res.redirect(`/images/${req.params.imageName}`);
+});
+

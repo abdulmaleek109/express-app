@@ -118,3 +118,21 @@ app.post('/api/orders', async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
+app.get('/api/orders', async (req, res) => {
+    try {
+        const orders = await db.collection('orders').aggregate([
+            {
+                $lookup: {
+                    from: 'lessons',
+                    localField: 'lessonIds',
+                    foreignField: '_id',
+                    as: 'lessons'
+                }
+            }
+        ]).toArray();
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
